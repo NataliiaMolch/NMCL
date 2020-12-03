@@ -1,0 +1,45 @@
+% Function evaluates the RHS corresponding to a second-order MUSCL scheme
+% with a mid-point rule for time-integration
+
+function RHS = evalRHS(U,g,k,h,N,bc,limiter,M, scheme)
+
+% Need to extend by 2 ghost cells on either side
+U_ext = applyBC_2D(U,bc,2);
+
+[A, absA] = RoeSolver(U_ext,g);
+
+% Obtain limited slope for N+2 cells
+dU      = zeros(2,N+2);
+dU(1,:) = SlopeLimiter(U_ext(1,:),limiter, M, h);
+dU(2,:) = SlopeLimiter(U_ext(2,:),limiter, M, h);
+
+% Obtain cell solution at k/2 with f'(u) = A
+Unph = [U_ext(:,2) - 0.5*k/h*A(:,:,1)*dU(:,1)];
+for i = 2:(length(U_ext)-2)
+    Unph = [Unph,U_ext(:,i+1) - 0.5*k/h*A(:,:,i)*dU(:,i)];
+end
+% disp(N)
+% disp(length(U_ext)-2)
+% disp(size(U_ext))
+% disp(size(dU))
+% disp(size(Unph))
+
+% Obtain interface values at k/2
+UL = Unph(:,1:end-1) + 0.5*dU(:,1:end-1);
+UR = Unph(:,2:end)   - 0.5*dU(:,2:end);
+% disp("UL")
+% disp(size(UL))
+% disp("UR")
+% disp(size(UR))
+% Evaluate flux
+if scheme == 'LW'
+    flux = Lax_Friederich_2D();
+elseif scheme == 'Roe'
+    flux = GodunovFlux(A,absA,UL,UR);
+% disp("flux")
+% disp(size(flux))
+% Update solution to k
+RHS =  - (flux(:,2:end) - flux(:,1:end-1))/h;
+
+
+return
