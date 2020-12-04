@@ -39,7 +39,7 @@ for lim = limiters
         h = dx;
         x = a : dx : b;
         xc = (a+0.5*dx):dx:(b-0.5*dx);
-        q_exact_arr = q_exact(xc, T);
+        q_exact = q_exact(xc, T);
 
         N  = length(xc);
         % Initial values
@@ -76,9 +76,9 @@ for lim = limiters
             iter1 = iter1 + 1;
         end
         
-        err_dx1 = [err_dx1, norm(q_exact_arr - U1,2)];
+        err_dx1 = [err_dx1, norm(q_exact(xc, T) - U1,2)];
         
-        if dx == min(dx_values)
+        if xd == min(dx_values)
             err_all = [err_all, err_dx];
             q_all = [q_all, U1];
         end
@@ -121,5 +121,6 @@ for lim = limiters
     iter_lim  = iter_lim +1;
 end
     
-save("ex_1/"+scheme+lim+"/vars.mat", 'err_all', 'q_all', 'q_exact_arr')
+fig = figure(dx_iter + 1);
+loglog(dx_values, err_all,)
 
