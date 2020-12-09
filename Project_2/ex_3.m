@@ -42,7 +42,7 @@ N  = length(x_fine);
 
 time = 0; iter = 0;
 lim = "TVB";
-err_all = [];
+err_dx = [];
 
 while time < T
     if sum(U_fine(1,:) < 0) ~= 0
@@ -75,6 +75,7 @@ end
 q_exact_T = U_fine;
 
 time = 0; iter = 0;
+leg = [];
 for M = M_values
     disp("computing dx = " + num2str(dx))
     % Discretization
@@ -83,7 +84,7 @@ for M = M_values
     N  = length(xc);
     % Initial values
     U1 = [h0(xc); m0(xc)];
-
+    
     time = 0; iter = 0;
     n_alpha = 0;
 
@@ -115,11 +116,10 @@ for M = M_values
         iter = iter + 1;
     end
 
-    dx_iter = dx_iter + 1;
 
      % Correlate mesh and fine mesh
     iter_c = 1; q_fine_compressed = zeros(size(U1));
-    iter = 1; compres = int32(c(dx_iter));
+    iter = 1; compres = int32(c);
     while iter_c + compres <= length(U_fine)
         q_fine_compressed(:,iter) = mean(U_fine(:,iter_c:iter_c+compres), 2);
         iter_c = iter_c+compres; iter = iter + 1;
@@ -127,9 +127,7 @@ for M = M_values
     q_fine_compressed(:,end) = mean(U_fine(:,iter_c:end), 2);
     err = U1 - q_fine_compressed;
     err_dx = [err_dx, norm(err,2)];
-
-end
-
+    
     fig = figure(1);
 
     subplot(2,1,1)
@@ -139,39 +137,41 @@ end
     subplot(2,1,2)
     plot(xc,U1(2,:),'LineWidth',1); grid on;
     hold all
+
+%     err_all = [err_all; err_dx];
+
     
-    err_all = [err_all; err_dx];
+    leg = [leg, "M = " + num2str(M)];
+
+end
     
 
 
 fig2 = figure(2);
-
-loglog(dx_values, err_all(1,:), 'r*-',dx_values, err_all(2,:), 'm*-', ...
-    dx_values, err_all(3,:), 'g*-',dx_values, err_all(4,:), 'b*-' )
-legend(["NONE" "MUSCL" "MINMOD" "TVB"])
-title(["Error vs \Delta x for different limiters"])
-xlabel("\Delta x, \Delta x = "+num2str(dx(1)))
+loglog(M_values, err_dx); hold all; grid on;
+title(["Error vs M for different limiters"])
+xlabel("M")
 ylabel("Error")
 saveas(fig2, folder+"error_combined.png")
 
 fig1  = figure(1);
-leg = [limiters, "Exact"];
+leg = [leg, "Exact"];
 
 subplot(2,1,1)
 plot(x_fine,q_exact_T(1,:),'--k','LineWidth',2);
 xlim([0 2]);
 legend(leg,'Location','Best')
 grid on;
-title("Depth, \Delta x = "+num2str(dx_values(1)))
+title("Depth")
 hold off
 
 subplot(2,1,2)
 plot(x_fine,q_exact_T(2,:),'--k','LineWidth',2);
 xlim([0 2]);
-title("Discharge, \Delta x = "+num2str(dx_values(1)))
+title("Discharge")
 legend(leg,'Location','Best')
 grid on;
 hold off
-dx = dx_values(1);
+dx = 10;
 filename = folder+num2str(dx)+".png";
 saveas(fig1, filename)
