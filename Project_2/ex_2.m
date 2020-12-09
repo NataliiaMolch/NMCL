@@ -32,7 +32,7 @@ switch IC
 end
 
 % Define different values of \delta x
-dx_values = [0.0005 0.005 0.001 0.01];
+dx_values = [0.0005 0.001 0.005 0.01];
 dx_fine = 0.0001;
 c = dx_values/dx_fine;  %compression for fine mesh
 q_exact_T = 0;

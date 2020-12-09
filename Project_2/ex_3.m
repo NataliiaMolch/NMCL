@@ -41,7 +41,7 @@ U_fine = [h0(x_fine); m0(x_fine)];
 N  = length(x_fine);
 
 time = 0; iter = 0;
-lim = "MINMOD";
+lim = "TVB";
 err_all = [];
 
 while time < T
@@ -59,13 +59,13 @@ while time < T
 
     % Apply boundary conditions
     h = dx_fine;
-    L = evalRHS(U_fine,g,k,h,N,bc,lim,M, scheme);
+    L = evalRHS(U_fine,g,k,h,N,bc,lim,10, scheme);
     Utmp = U_fine + k*L;
 
-    L = evalRHS(Utmp,g,k,h,N,bc,lim,M, scheme);
+    L = evalRHS(Utmp,g,k,h,N,bc,lim,10, scheme);
     Utmp = 0.75*U_fine + 0.25*(Utmp + k*L);
 
-    L = evalRHS(Utmp,g,k,h,N,bc,lim,M, scheme);
+    L = evalRHS(Utmp,g,k,h,N,bc,lim,10, scheme);
     U_fine = U_fine/3 + 2/3*(Utmp + k*L);
 
     time = time + k;
@@ -74,61 +74,61 @@ end
 
 q_exact_T = U_fine;
 
+time = 0; iter = 0;
+for M = M_values
+    disp("computing dx = " + num2str(dx))
+    % Discretization
+    x = a : dx : b;
+    xc = (a+0.5*dx):dx:(b-0.5*dx);
+    N  = length(xc);
+    % Initial values
+    U1 = [h0(xc); m0(xc)];
+
     time = 0; iter = 0;
-    for dx = dx_values
-        disp("computing dx = " + num2str(dx))
-        % Discretization
-        x = a : dx : b;
-        xc = (a+0.5*dx):dx:(b-0.5*dx);
-        N  = length(xc);
-        % Initial values
-        U1 = [h0(xc); m0(xc)];
+    n_alpha = 0;
 
-        time = 0; iter = 0;
-        n_alpha = 0;
+    while time < T
 
-        while time < T
-
-            if sum(U1(1,:) < 0) ~= 0
-                n_complex = sum(U1(1,:) < 0);
-                disp("k is complex " + num2str(n_complex)+ " for dx = " + num2str(dx) + " and iteration " + num2str(iter))
-                break
-            end
-
-            k = CFL*dx/(max(abs(U1(2,:)./U1(1,:)) + sqrt(abs(g*U1(1,:)))));
-
-            if(time + k > T)
-                k = T - time;
-            end
-
-            h = dx;
-            L = evalRHS(U1,g,k,h,N,bc,lim,M, scheme);
-            Utmp = U1 + k*L;
-
-            L = evalRHS(Utmp,g,k,h,N,bc,lim,M, scheme);
-            Utmp = 0.75*U1 + 0.25*(Utmp + k*L);
-
-            L = evalRHS(Utmp,g,k,h,N,bc,lim,M, scheme);
-            U1 = U1/3 + 2/3*(Utmp + k*L);
-
-            time = time + k;
-            iter = iter + 1;
+        if sum(U1(1,:) < 0) ~= 0
+            n_complex = sum(U1(1,:) < 0);
+            disp("k is complex " + num2str(n_complex)+ " for dx = " + num2str(dx) + " and iteration " + num2str(iter))
+            break
         end
-        
-        dx_iter = dx_iter + 1;
 
-         % Correlate mesh and fine mesh
-        iter_c = 1; q_fine_compressed = zeros(size(U1));
-        iter = 1; compres = int32(c(dx_iter));
-        while iter_c + compres <= length(U_fine)
-            q_fine_compressed(:,iter) = mean(U_fine(:,iter_c:iter_c+compres), 2);
-            iter_c = iter_c+compres; iter = iter + 1;
+        k = CFL*dx/(max(abs(U1(2,:)./U1(1,:)) + sqrt(abs(g*U1(1,:)))));
+
+        if(time + k > T)
+            k = T - time;
         end
-        q_fine_compressed(:,end) = mean(U_fine(:,iter_c:end), 2);
-        err = U1 - q_fine_compressed;
-        err_dx = [err_dx, norm(err,2)];
-        
+
+        h = dx;
+        L = evalRHS(U1,g,k,h,N,bc,lim,M, scheme);
+        Utmp = U1 + k*L;
+
+        L = evalRHS(Utmp,g,k,h,N,bc,lim,M, scheme);
+        Utmp = 0.75*U1 + 0.25*(Utmp + k*L);
+
+        L = evalRHS(Utmp,g,k,h,N,bc,lim,M, scheme);
+        U1 = U1/3 + 2/3*(Utmp + k*L);
+
+        time = time + k;
+        iter = iter + 1;
     end
+
+    dx_iter = dx_iter + 1;
+
+     % Correlate mesh and fine mesh
+    iter_c = 1; q_fine_compressed = zeros(size(U1));
+    iter = 1; compres = int32(c(dx_iter));
+    while iter_c + compres <= length(U_fine)
+        q_fine_compressed(:,iter) = mean(U_fine(:,iter_c:iter_c+compres), 2);
+        iter_c = iter_c+compres; iter = iter + 1;
+    end
+    q_fine_compressed(:,end) = mean(U_fine(:,iter_c:end), 2);
+    err = U1 - q_fine_compressed;
+    err_dx = [err_dx, norm(err,2)];
+
+end
 
     fig = figure(1);
 
