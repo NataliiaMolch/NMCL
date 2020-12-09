@@ -5,6 +5,8 @@ close all
 
 % Setting : boundary condition
 bc_name = "periodic"; % "open"
+scheme = 
+limiters = 
 IC = 1; %or 2
 
 % Domains

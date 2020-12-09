@@ -6,8 +6,8 @@ close all
 % Setting : boundary condition
 bc = "periodic"; % "open"
 % lim = 'NONE';%'NONE'; % 'MUSCLE, 'TVD'
-limiters = ["NONE" "MUSCLE" "MINMOD" "TVD"];
-scheme = "LF"; %"LF"
+limiters = ["NONE" "MUSCL" "MINMOD" "TVB"];
+scheme = "Roe"; %"LF"
 
 % Domains
 a = 0; b = 2.0; t0 = 0; T = 2;
@@ -25,11 +25,11 @@ x_values = linspace(a,b,1001);
 q_exact_T = q_exact(x_values, T);
 
 % Define different values of \delta x
-dx_values = [0.0005 0.001 0.005 0.01]; %[ 0.01 0.05 0.1 0.5];
-
+dx_values = [0.001];% %[0.0005 0.001 0.005 0.01]; %[ 0.01 0.05 0.1 0.5];
+err_all = []; m_all = []; h_all = [];
 
 for lim = limiters
-    err_dx1 = []; err_all = []; q_all = [];
+    err_dx1 = []; 
     dx_iter = 0;
     iter_lim = 0;
     
@@ -48,7 +48,10 @@ for lim = limiters
 
         iter1 = 0;
         time1 = 0;
-
+        
+        folder = "ex_1/"+scheme+"/"+lim+"/";
+        mkdir(folder)
+        
         while time1 < T
 
             if sum(U1(1,:) < 0) ~= 0 
@@ -78,48 +81,92 @@ for lim = limiters
         
         err_dx1 = [err_dx1, norm(q_exact_arr - U1,2)];
         
-        if dx == min(dx_values)
-            err_all = [err_all, err_dx];
-            q_all = [q_all, U1];
+        if dx == dx_values(1)
+            disp("Got here")
+            
+            fig = figure(2);
+
+            subplot(2,1,1)
+            plot(xc,U1(1,:),'LineWidth',1);
+            hold all
+            
+
+            subplot(2,1,2)
+            plot(xc,U1(2,:),'LineWidth',1);
+            hold all
+            
         end
         dx_iter = dx_iter + 1;
 
 
-        fig = figure(dx_iter);
-        subplot(2,1,1)
-        plot(xc,U1(1,:),'-r','LineWidth',2);
-        hold all
-        plot(xc,q_exact(1,:),'--k','LineWidth',2);
-        ylim([0.8 1.2]);xlim([0 2]);
-        legend('Numerical Depth','Exact Depth','Location','Best')
-        grid on;
-        title(["Time = "+num2str(time), "dx = "+num2str(dx)])
-        hold off
-
-        subplot(2,1,2)
-        plot(xc,U1(2,:),'-r','LineWidth',2);
-        hold all
-        plot(xc,q_exact(2,:),'--k','LineWidth',2);
-        ylim([-0.2 0.1]);xlim([0 2]);
-        legend('Numerical Discharge','Exact Discharge','Location','Best')
-        grid on;
-        hold off
-        folder = "ex_1/"+scheme+lim+"/";
-        mkdir(folder)
-        saveas(fig, folder+num2str(dx)+".png")
+%         fig = figure(dx_iter);
+%         subplot(2,1,1)
+%         plot(xc,U1(1,:),'-r','LineWidth',2);
+%         hold all
+%         plot(xc,q_exact_arr(1,:),'--k','LineWidth',2);
+%         xlim([0 2]);
+%         legend('Numerical Depth','Exact Depth','Location','Best')
+%         grid on;
+%         title([scheme + " " + lim + " : Time = "+num2str(time1), "dx = "+num2str(dx)])
+%         hold off
+% 
+%         subplot(2,1,2)
+%         plot(xc,U1(2,:),'-r','LineWidth',2);
+%         hold all
+%         plot(xc,q_exact_arr(2,:),'--k','LineWidth',2);
+%         xlim([0 2]);
+%         legend('Numerical Discharge','Exact Discharge','Location','Best')
+%         grid on;
+%         hold off
+%         filename = folder+num2str(dx)+".png";
+%         saveas(fig, filename)
     end
     
-    dx_iter = dx_iter + 1;
-    fig = figure(dx_iter);
-    loglog(dx_values, err_dx1, 'r*-'); grid on;
-    title(["Error vs \Delta x"])
-    xlabel("\Delta x")
-    ylabel("Error")
-    legend([lim])
-    saveas(fig, folder+"/error.png")
+    err_all = [err_all; err_dx1];
+%     
+%     dx_iter = dx_iter + 1;
+%     fig = figure(dx_iter);
+%     loglog(dx_values, err_dx1, 'r*-'); grid on;
+%     title(["Error vs \Delta x"])
+%     xlabel("\Delta x")
+%     ylabel("Error")
+%     legend([lim])
+%     saveas(fig, folder+"/error.png")
     
     iter_lim  = iter_lim +1;
 end
-    
-save("ex_1/"+scheme+lim+"/vars.mat", 'err_all', 'q_all', 'q_exact_arr')
 
+folder = 'ex_1/' +scheme+ '/'; 
+
+
+fig = figure(1);
+loglog(dx_values, err_all(1,:), 'r*-',dx_values, err_all(2,:), 'm*-', ...
+    dx_values, err_all(3,:), 'g*-',dx_values, err_all(4,:), 'b*-' )
+legend(["NONE" "MUSCL" "MINMOD" "TVB"])
+title(["Error vs \Delta x for different limiters"])
+xlabel("\Delta x, \Delta x = "+num2str(dx(1)))
+ylabel("Error")
+saveas(fig, folder+"error_combined.png")
+
+fig2 = figure(2);
+
+leg = [limiters, "Exact"];
+subplot(2,1,1)
+plot(x_values,q_exact_T(1,:),'--k','LineWidth',2);
+xlim([0 2]);
+title("Depth")
+legend(leg,'Location','Best')
+grid on;
+title([scheme + " " + lim + " : Time = 2, dx = "+num2str(dx)])
+hold off
+
+subplot(2,1,2)
+plot(x_values,q_exact_T(2,:),'--k','LineWidth',2);
+xlim([0 2]);
+title("Discharge")
+legend(leg,'Location','Best')
+grid on;
+hold off
+dx = dx_values(1);
+filename = folder+num2str(dx)+".png";
+saveas(fig, filename)
