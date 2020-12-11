@@ -6,7 +6,6 @@ function RHS = evalRHS(U,g,k,h,N,bc,limiter,M, scheme)
 % Need to extend by 2 ghost cells on either side
 U_ext = applyBC_2D(U,bc,2);
 [A, absA] = RoeSolver(U_ext,g);
-
 % Obtain limited slope for N+2 cells
 dU      = zeros(2,N+2);
 dU(1,:) = SlopeLimiter(U_ext(1,:),limiter, M, h);

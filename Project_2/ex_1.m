@@ -7,7 +7,7 @@ close all
 bc = "periodic"; % "open"
 % lim = 'NONE';%'NONE'; % 'MUSCLE, 'TVD'
 limiters = ["NONE" "MUSCL" "MINMOD" "TVB"];
-scheme = "Roe"; %"LF"
+scheme = "LF"; %"LF"
 
 % Domains
 a = 0; b = 2.0; t0 = 0; T = 2;
