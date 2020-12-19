@@ -1,7 +1,6 @@
 function [xc, q] = MUSCL_SSPRK3(a, b, dx, bc, IC, u, g, M, Tfinal, CFL, flux, lim, source)
 % Cell centers
 xc = a + 0.5*dx:dx:(b-0.5*dx);
-
 % Cell-center values sufficient for first-order schemes
 q = IC(xc);
 

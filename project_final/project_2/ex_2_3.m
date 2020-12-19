@@ -12,7 +12,7 @@ mkdir(res_path);
 % Method constants
 g = 1;
 u = 0.25;
-M = 10;
+M = 50;
 
 % Discretization and time parameters
 Tfinal = 2;
@@ -88,12 +88,19 @@ for i = 1:length(limiters)
     txt = ['Limiter ',num2str(limiters(i))];
     plot(dx_values,err_lf(:, i), 'LineWidth',2, 'DisplayName',txt);
 end
+txt = ['h'];
+loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
+txt = ['h^2'];
+loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
+txt = ['h^3'];
+loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
+title("Roe flux")
 legend('Location','NorthWest')
-title("Lax-Freidrich flux")
 grid on;
 ylabel('Error')
 xlabel('dx')
 hold off
+set(gca, 'XScale', 'log', 'YScale', 'log');
 saveas(fig, res_path + "/" + "LF_error.png");
 
 % Roe error
@@ -103,10 +110,17 @@ for i = 1:length(limiters)
     txt = ['Limiter ',num2str(limiters(i))];
     plot(dx_values,err_roe(:, i), 'LineWidth',2, 'DisplayName',txt);
 end
+txt = ['h'];
+loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
+txt = ['h^2'];
+loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
+txt = ['h^3'];
+loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
 title("Roe flux")
 legend('Location','NorthWest')
 grid on;
 ylabel('Error')
 xlabel('dx')
 hold off
+set(gca, 'XScale', 'log', 'YScale', 'log');
 saveas(fig, res_path + "/" + "roe_error.png");

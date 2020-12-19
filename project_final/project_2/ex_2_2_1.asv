@@ -6,13 +6,13 @@ close all
 addpath('../utils')
 
 % Creating path for results
-res_path = "2_2";
+res_path = "2_1";
 mkdir(res_path);
 
 % Method constants
 g = 1;
 u = 0.25;
-M = 50;
+M = 10;
 
 % Discretization and time parameters
 Tfinal = 2;
@@ -23,7 +23,7 @@ a = 0;
 b = 2;
 
 % Initial data set
-IC = @(x) [1 - 0.2*sin(2*pi*x); 0.5*ones(1, length(x))];
+IC = @(x) [1 - 0.1*sin(pi*x); zeros(1, length(x))];
 source = @(xc,time,u,g,h0) zeros(2, length(xc));
 lf_flux = @(UL, UR, g) LF_flux(UL, UR, g);
 roe_flux = @(UL, UR, g) Roe_flux(UL, UR, g);
@@ -31,16 +31,16 @@ bc  = 'periodic';
 limiters = ["NONE" "MUSCL" "MINMOD" "TVB"];
 
 % Define different values of \delta x
-dx_values = [0.05, 0.01];
+dx_values = [0.0005 0.000.001 0.005 0.01];
 err_lf = [];
 err_roe = [];
 dx_iter = 0;
 
 % Reference solution
-ref_sol_file = 'ref_sol_2.mat';
-load(ref_sol_file,'ref_sol_2_dx')
-load(ref_sol_file,'ref_sol_2_x')
-load(ref_sol_file,'ref_sol_2')
+ref_sol_file = 'ref_sol_1.mat';
+load(ref_sol_file,'ref_sol_1_dx')
+load(ref_sol_file,'ref_sol_1_x')
+load(ref_sol_file,'ref_sol_1')
 
 for dx = dx_values
     disp("Computing dx = " + num2str(dx));
@@ -60,10 +60,10 @@ for dx = dx_values
         i = 1; j = 1;
         while i <= length(xc)
             j_start = j;
-            while (ref_sol_2_x(j) + 0.5 * ref_sol_2_dx) < i * dx
+            while (ref_sol_1_x(j) + 0.5 * ref_sol_1_dx) < i * dx
                 j = j + 1;
             end
-            ref_sol(:, end + 1) = mean(ref_sol_2(:, j_start:j), 2);
+            ref_sol(:, end + 1) = mean(ref_sol_1(:, j_start:j), 2);
             i = i + 1;
         end
         
@@ -72,9 +72,9 @@ for dx = dx_values
     end
     
     % LF flux dx plot
-    plot_support(a, b, dx, xc, Tfinal, 2*(dx_iter - 1) + 1, ref_sol_2_x, ref_sol_2, limiters, q_lf, "Lax-Freidrich", res_path, 0.6, 1.4, 0.2, 0.8);
+    plot_support(a, b, dx, xc, Tfinal, 2*(dx_iter - 1) + 1, ref_sol_1_x, ref_sol_1, limiters, q_lf, "Lax-Freidrich", res_path, 0.8, 1.2, -0.1, 0.1);
     % Roe flux dx plot
-    plot_support(a, b, dx, xc, Tfinal, 2*(dx_iter - 1) + 2, ref_sol_2_x, ref_sol_2, limiters, q_roe, "Roe", res_path, 0.6, 1.4, 0.2, 0.8);
+    plot_support(a, b, dx, xc, Tfinal, 2*(dx_iter - 1) + 2, ref_sol_1_x, ref_sol_1, limiters, q_roe, "Roe", res_path, 0.8, 1.2, -0.1, 0.1);
     
     err_lf = [err_lf; err_dx_lf];
     err_roe = [err_roe; err_dx_roe];
@@ -83,46 +83,30 @@ end
 % LF error
 dx_iter = dx_iter + 1;
 fig = figure(2*(dx_iter - 1) + 1);
-% axes('XScale', 'log', 'YScale', 'log')
 for i = 1:length(limiters)
     hold all
     txt = ['Limiter ',num2str(limiters(i))];
-    loglog(dx_values,err_lf(:, i), 'LineWidth',1, 'DisplayName',txt);
+    plot(dx_values,err_lf(:, i), 'LineWidth',2, 'DisplayName',txt);
 end
-txt = ['h'];
-loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
-txt = ['h^2'];
-loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
-txt = ['h^3'];
-loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
 legend('Location','NorthWest')
 title("Lax-Freidrich flux")
 grid on;
 ylabel('Error')
 xlabel('dx')
 hold off
-set(gca, 'XScale', 'log', 'YScale', 'log');
 saveas(fig, res_path + "/" + "LF_error.png");
 
 % Roe error
 fig = figure(2*(dx_iter - 1) + 2);
-% axes('XScale', 'log', 'YScale', 'log')
 for i = 1:length(limiters)
     hold all
     txt = ['Limiter ',num2str(limiters(i))];
-    loglog(dx_values,err_roe(:, i), 'LineWidth',1, 'DisplayName',txt);
+    plot(dx_values,err_roe(:, i), 'LineWidth',2, 'DisplayName',txt);
 end
-txt = ['h'];
-loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
-txt = ['h^2'];
-loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
-txt = ['h^3'];
-loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
 title("Roe flux")
 legend('Location','NorthWest')
 grid on;
 ylabel('Error')
 xlabel('dx')
 hold off
-set(gca, 'XScale', 'log', 'YScale', 'log');
 saveas(fig, res_path + "/" + "roe_error.png");
