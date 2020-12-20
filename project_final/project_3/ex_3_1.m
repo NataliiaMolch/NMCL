@@ -49,8 +49,10 @@ for dx = dx_values
     [xc, q_lf] = SSPRK3(a, b, dx, bc, ICh, ICm, u, g, k, Tfinal, CFL, lf_flux, integrated_source);
     [xc, q_roe] = SSPRK3(a, b, dx, bc, ICh, ICm, u, g, k, Tfinal, CFL, roe_flux, integrated_source);
     
-    err_lf(end+1) = norm(q_exact - q_lf,2);
-    err_roe(end+1) = norm(q_exact - q_roe,2);
+    for i=1:2
+        err_lf(i, end+2-i) = norm(q_exact(i, :) - q_lf(i, :)) / length(q_lf(i, :));
+        err_roe(i, end+2-i) = norm(q_exact(i, :) - q_roe(i, :)) / length(q_roe(i, :));
+    end
     
     fig = figure(dx_iter);
     subplot(2,1,1)
@@ -82,13 +84,40 @@ for dx = dx_values
     saveas(fig, res_path + "/" + num2str(dx)+".png")
 end
 
-dx_iter = dx_iter + 1;
-fig = figure(dx_iter);
-loglog(dx_values, err_lf, 'r-'); grid on;
-hold all
-loglog(dx_values, err_roe, 'b-');
-legend('Lax-Friedrich method', 'Godunov method','Location','northwest')
+fig = figure();
+set(gcf,'position',[10,10,800,400])
+hold on
+txt = ['h^2'];
+loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
+txt = ['h^3'];
+loglog(dx_values,dx_values.^3, 'k-.', 'LineWidth',1, 'DisplayName',txt);
+r = polyfit(log(dx_values), log(err_lf(1, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-r','LineWidth',1, 'DisplayName', "Lax-Friedrich depth");
+r = polyfit(log(dx_values), log(err_roe(1, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-b','LineWidth',1, 'DisplayName', "Godunov depth");
+
+legend('Location','northeastoutside')
 ylabel('Error')
 xlabel('dx')
 hold off
-saveas(fig, res_path + "/" + "error.png");
+set(gca, 'XScale', 'log', 'YScale', 'log');
+saveas(fig, res_path + "/" + "depth_error.png");
+
+fig = figure();
+set(gcf,'position',[10,10,800,400])
+hold on
+txt = ['h^2'];
+loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
+txt = ['h^3'];
+loglog(dx_values,dx_values.^3, 'k-.', 'LineWidth',1, 'DisplayName',txt);
+r = polyfit(log(dx_values), log(err_lf(2, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-r', 'LineWidth',1, 'DisplayName', "Lax-Friedrich discharge");
+r = polyfit(log(dx_values), log(err_roe(2, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-b', 'LineWidth',1, 'DisplayName', "Godunov discharge");
+
+legend('Location','northeastoutside')
+ylabel('Error')
+xlabel('dx')
+hold off
+set(gca, 'XScale', 'log', 'YScale', 'log');
+saveas(fig, res_path + "/" + "discharge_error.png");
