@@ -49,9 +49,9 @@ for dx = dx_values
     q_lf = {};
     q_roe = {};
     
-    for lim = limiters
-        [xc, q_lf{end+1}] = SSPRK3(a, b, dx, bc, IC, u, g, M, Tfinal, CFL, lf_flux, lim, source);
-        [xc, q_roe{end+1}] = SSPRK3(a, b, dx, bc, IC, u, g, M, Tfinal, CFL, roe_flux, lim, source);
+    for lim = 1:length(limiters)
+        [xc, q_lf{end+1}] = SSPRK3(a, b, dx, bc, IC, u, g, M, Tfinal, CFL, lf_flux, limiters(lim), source);
+        [xc, q_roe{end+1}] = SSPRK3(a, b, dx, bc, IC, u, g, M, Tfinal, CFL, roe_flux, limiters(lim), source);
         
         % Correlate mesh and fine mesh
         ref_sol = [];
