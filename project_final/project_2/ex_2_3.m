@@ -31,7 +31,7 @@ bc  = 'open';
 limiters = ["NONE" "MUSCL" "MINMOD" "TVB"];
 
 % Define different values of \delta x
-dx_values = [0.01, 0.005, 0.001];
+dx_values = [0.05, 0.005, 0.001];
 err_lf = cell(length(limiters));
 err_roe = cell(length(limiters));
 dx_iter = 0;

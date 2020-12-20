@@ -34,7 +34,7 @@ roe_flux = @(UL, UR, g) Roe_flux(UL, UR, g);
 bc  = 'periodic';
 
 % Define different values of \delta x
-dx_values = [0.08, 0.006, 0.005, 0.004, 0.002];
+dx_values = [0.0008 0.001 0.0025 0.005 0.0075 0.01];
 err_lf = [];
 err_roe = [];
 dx_iter = 0;
