@@ -47,8 +47,8 @@ for dx = dx_values
     
     q_exact = find_exact(h0, u, xc, Tfinal);
     for i=1:2
-        err_dx_lf(i, end+2-i) = norm(q_exact(i, :) - q_lf(i, :));
-        err_dx_roe(i, end+2-i) = norm(q_exact(i, :) - q_roe(i, :));
+        err_dx_lf(i, end+2-i) = norm(q_exact(i, :) - q_lf(i, :)) / length(q_lf(i, :));
+        err_dx_roe(i, end+2-i) = norm(q_exact(i, :) - q_roe(i, :)) / length(q_roe(i, :));
     end
     
     fig = figure(dx_iter);
@@ -81,18 +81,15 @@ for dx = dx_values
     saveas(fig, res_path + "/" + num2str(dx)+".png")
 end
 
-dx_iter = dx_iter + 1;
-fig = figure(dx_iter);
+fig = figure();
 set(gcf,'position',[10,10,800,400])
 txt = ['h'];
 loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
 hold on
-% txt = ['h^2'];
-% loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
-% txt = ['h^3'];
-% loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
-loglog(dx_values, err_dx_lf(1, :), '-r','LineWidth',1, 'DisplayName', "Lax-Friedrich depth");
-loglog(dx_values, err_dx_roe(1, :), '-b','LineWidth',1, 'DisplayName', "Godunov depth");
+r = polyfit(log(dx_values), log(err_dx_lf(1, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-r','LineWidth',1, 'DisplayName', "Lax-Friedrich depth");
+r = polyfit(log(dx_values), log(err_dx_roe(1, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-b','LineWidth',1, 'DisplayName', "Godunov depth");
 
 legend('Location','northeastoutside')
 ylabel('Error')
@@ -101,22 +98,19 @@ hold off
 set(gca, 'XScale', 'log', 'YScale', 'log');
 saveas(fig, res_path + "/" + "depth_error.png");
 
-dx_iter = dx_iter + 1;
-fig = figure(dx_iter);
+fig = figure();
 set(gcf,'position',[10,10,800,400])
 txt = ['h'];
 loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
 hold on
-% txt = ['h^2'];
-% loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
-% txt = ['h^3'];
-% loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
-loglog(dx_values, err_dx_lf(1, :), '-r', 'LineWidth',1, 'DisplayName', "Lax-Friedrich discharge");
-loglog(dx_values, err_dx_roe(1, :), '-b', 'LineWidth',1, 'DisplayName', "Godunov discharge");
+r = polyfit(log(dx_values), log(err_dx_lf(2, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-r', 'LineWidth',1, 'DisplayName', "Lax-Friedrich discharge");
+r = polyfit(log(dx_values), log(err_dx_roe(2, :)), 1);
+loglog(dx_values, dx_values.^r(1).*exp(r(2)), '-b', 'LineWidth',1, 'DisplayName', "Godunov discharge");
 
 legend('Location','northeastoutside')
 ylabel('Error')
 xlabel('dx')
 hold off
 set(gca, 'XScale', 'log', 'YScale', 'log');
-saveas(fig, res_path + "/" + "depth_discharge.png");
+saveas(fig, res_path + "/" + "discharge_error.png");
