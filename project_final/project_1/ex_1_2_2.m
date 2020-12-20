@@ -60,8 +60,10 @@ for dx = dx_values
         i = i + 1;
     end
     
-    err_dx_lf(end+1) = norm(ref_sol - q_lf,2);
-    err_dx_roe(end+1) = norm(ref_sol - q_roe,2);
+    for i=1:2
+        err_dx_lf(i, end+2-i) = norm(ref_sol(i, :) - q_lf(i, :));
+        err_dx_roe(i, end+2-i) = norm(ref_sol(i, :) - q_roe(i, :));
+    end
     
     fig = figure(dx_iter);
     subplot(2,1,1)
@@ -95,11 +97,40 @@ end
 
 dx_iter = dx_iter + 1;
 fig = figure(dx_iter);
-loglog(dx_values, err_dx_lf, 'r-'); grid on;
-hold all
-loglog(dx_values, err_dx_roe, 'b-');
-legend('Lax-Friedrich method', 'Godunov method','Location','northoutside')
+set(gcf,'position',[10,10,800,400])
+txt = ['h'];
+loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
+hold on
+% txt = ['h^2'];
+% loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
+% txt = ['h^3'];
+% loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
+loglog(dx_values, err_dx_lf(1, :), '-r','LineWidth',1, 'DisplayName', "Lax-Friedrich depth");
+loglog(dx_values, err_dx_roe(1, :), '-b','LineWidth',1, 'DisplayName', "Godunov depth");
+
+legend('Location','northeastoutside')
 ylabel('Error')
 xlabel('dx')
 hold off
-saveas(fig, res_path + "/" + "error.png");
+set(gca, 'XScale', 'log', 'YScale', 'log');
+saveas(fig, res_path + "/" + "depth_error.png");
+
+dx_iter = dx_iter + 1;
+fig = figure(dx_iter);
+set(gcf,'position',[10,10,800,400])
+txt = ['h'];
+loglog(dx_values,dx_values, 'k-.', 'LineWidth',1, 'DisplayName',txt);
+hold on
+% txt = ['h^2'];
+% loglog(dx_values,dx_values.^2, 'k--', 'LineWidth',1, 'DisplayName',txt);
+% txt = ['h^3'];
+% loglog(dx_values,dx_values.^3, 'k-', 'LineWidth',1, 'DisplayName',txt);
+loglog(dx_values, err_dx_lf(1, :), '-r', 'LineWidth',1, 'DisplayName', "Lax-Friedrich discharge");
+loglog(dx_values, err_dx_roe(1, :), '-b', 'LineWidth',1, 'DisplayName', "Godunov discharge");
+
+legend('Location','northeastoutside')
+ylabel('Error')
+xlabel('dx')
+hold off
+set(gca, 'XScale', 'log', 'YScale', 'log');
+saveas(fig, res_path + "/" + "depth_discharge.png");

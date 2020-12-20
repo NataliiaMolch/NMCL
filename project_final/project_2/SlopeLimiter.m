@@ -32,8 +32,10 @@ switch limiter
     case 'MUSCL'
         dU = minmod([0.5*(dUL'+dUR'),2*dUL',2*dUR'])';
     case 'TVB'
-        a1 = 0.5*(dUL'+dUR');
-        dU = a1'.*(abs(a1) <= M*h^2)' + (abs(a1) > M*h^2)'.*minmod([0.5*(dUL'+dUR'),2*dUL',2*dUR'])';
+        a1 = dUL(1);
+        dU = a1*(abs(a1) <= M*h^2) + (abs(a1) > M*h^2)'.*minmod(dUL)';
+%         a1 = 0.5*(dUL'+dUR');
+%         dU = a1'.*(abs(a1) <= M*h^2)' + (abs(a1) > M*h^2)'.*minmod([0.5*(dUL'+dUR'),2*dUL',2*dUR'])';
 %         disp(limiter)
 %         disp(size(dU))
     otherwise
